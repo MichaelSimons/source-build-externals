@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;net6.0</TargetFrameworks>
+    <!-- This is a test project, vulnerabilities here aren't shipped -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\xunit.v3.assert.tests\**\*.cs" Exclude="**\obj\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' != '.NETCoreApp' ">
+    <PackageReference Include="System.Collections.Immutable" Version="[$(System_Collections_Immutable_Version)]" />
+    <PackageReference Include="System.Memory" Version="[$(System_Memory_Version)]" />
+  </ItemGroup>
+
+</Project>

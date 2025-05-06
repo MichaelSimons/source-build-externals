@@ -1,0 +1,175 @@
+<Project>
+
+  <Choose>
+    <When Condition=" '$(_XunitIncludeCommonItems)' != 'false' ">
+      <ItemGroup>
+        <Compile Include="$(MSBuildThisFileDirectory)common\EnvironmentVariables.cs" LinkBase="Common" />
+        <Compile Include="$(MSBuildThisFileDirectory)common\OverloadResolutionPriorityAttribute.cs" LinkBase="Common" />
+        <Compile Include="$(MSBuildThisFileDirectory)common\RequiredMemberAttribute.cs" LinkBase="Common" />
+      </ItemGroup>
+
+      <ItemGroup Condition=" !$(MSBuildProjectName.EndsWith('.tests')) AND !$(MSBuildProjectName.Contains('.assert')) ">
+        <Compile Include="$(MSBuildThisFileDirectory)common\DisposableExtensions.cs" LinkBase="Common" />
+        <Compile Include="$(MSBuildThisFileDirectory)xunit.v3.assert/Asserts/Sdk/StringSyntaxAttribute.cs" LinkBase="Common" />
+      </ItemGroup>
+    </When>
+  </Choose>
+
+  <!-- Enable building .NET Framework on non-Windows machines -->
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="$(Microsoft_NETFramework_ReferenceAssemblies_Version)">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Enable nullable support for older targets -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <PackageReference Include="TunnelVisionLabs.ReferenceAssemblyAnnotator" Version="$(TunnelVisionLabs_ReferenceAssemblyAnnotator_Version)">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageDownload Include="Microsoft.NETCore.App.Ref" Version="[$(Microsoft_NetCore_App_Ref_Version)]" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <AnnotatedReferenceAssemblyVersion>$(Microsoft_NetCore_App_Ref_Version)</AnnotatedReferenceAssemblyVersion>
+  </PropertyGroup>
+
+  <!-- Mono doesn't seem to find the System.Runtime facade with dynamic compilation, so copy it into our output for testing -->
+  <Target Name="CopySystemRuntimeFacade" AfterTargets="Build" Condition=" $(MSBuildProjectName.EndsWith('.tests')) AND '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <ItemGroup>
+      <FacadeBinaries Include="$(TargetFrameworkRootPath).NETFramework\$(TargetFrameworkVersion)\Facades\System.Runtime.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FacadeBinaries)" DestinationFolder="$(OutputPath)" />
+  </Target>
+
+  <!-- On Unix-like systems, mark .NET Framework binaries as executable -->
+  <Target
+      Name="MarkBinaryExecutable"
+      AfterTargets="Build"
+      Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' AND '$(OS)' != 'Windows_NT' AND $(TargetPath.EndsWith('.exe')) ">
+    <Exec Command="chmod +x '$(TargetPath)'" />
+  </Target>
+
+  <!-- Optional ILRepack targets for projects that want to opt-in -->
+  <Target
+      Name="ILRepack"
+      AfterTargets="Build"
+      Condition=" '$(TargetFramework)' != '' AND '$(RunILRepack)' == 'true' ">
+    <PropertyGroup>
+      <OutputAssembly>$([System.IO.Path]::Combine($(TargetDir), "merged", "$(TargetFileName)"))</OutputAssembly>
+    </PropertyGroup>
+
+    <Message Text="$(TargetName) -> $(OutputAssembly)" Importance="High" />
+    <CallTarget Targets="ILRepackConditional" />
+  </Target>
+
+  <Target
+      Name="ILRepackConditional"
+      Inputs="$(TargetPath)"
+      Outputs="$(TargetDir)merged\$(TargetFileName)">
+
+    <MakeDir Directories="$(TargetDir)merged" />
+
+    <PropertyGroup>
+      <MainAssembly>$([System.IO.Path]::Combine($(TargetDir), "$(TargetFileName)"))</MainAssembly>
+      <OutputAssembly>$([System.IO.Path]::Combine($(TargetDir), "merged", "$(TargetFileName)"))</OutputAssembly>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ILRepackDependencies
+          Include="$(TargetDir)*.dll"
+          Exclude="$(MainAssembly);@(ILRepackExclusions)"/>
+      <ILRepackLibPaths Include="$(TargetDir)" />
+      <ILRepackLibPaths Include="$(TargetFrameworkRootPath)$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\" Condition=" '$(TargetFrameworkRootPath)' != '' " />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(ILRepackExclusions)" DestinationFolder="$(TargetDir)merged" />
+    <Exec
+        StandardOutputImportance="low"
+        IgnoreStandardErrorWarningFormat="true"
+        Command="dotnet &quot;$(ILRepack)&quot; -internalize -parallel -keyfile:$(AssemblyOriginatorKeyFile) @(ILRepackLibPaths->'-lib:%(FullPath)', ' ') -out:$(OutputAssembly) $(MainAssembly) @(ILRepackDependencies, ' ')" />
+    <Exec Command="chmod +x '$(OutputAssembly)'" Condition=" '$(OS)' != 'Windows_NT' AND $(OutputAssembly.EndsWith('.exe')) " />
+  </Target>
+
+  <Target Name="CreateCustomReadmeForNuGet" BeforeTargets="GenerateNuspec">
+    <ReadLinesFromFile File="$(MSBuildThisFileDirectory)..\.git\modules\src\xunit.v3.assert\Asserts\HEAD">
+      <Output TaskParameter="Lines" PropertyName="GitAssertModuleCommitId"/>
+    </ReadLinesFromFile>
+    <ConvertToAbsolutePath Paths="$(NuspecFile)">
+      <Output TaskParameter="AbsolutePaths" PropertyName="_XunitNuspecFile" />
+    </ConvertToAbsolutePath>
+    <XmlPeek XmlInputPath="$(_XunitNuspecFile)" Query="//package/metadata/description/text()">
+      <Output TaskParameter="Result" PropertyName="_XunitNuspecDescription" />
+    </XmlPeek>
+    <XmlPeek XmlInputPath="$(_XunitNuspecFile)" Query="//package/metadata/title/text()">
+      <Output TaskParameter="Result" PropertyName="_XunitNuspecTitle" />
+    </XmlPeek>
+    <PropertyGroup>
+      <_XunitNuspecDescription>$(_XunitNuspecDescription.Replace('https://github.com/xunit/assert.xunit/blob/$GitAssertModuleCommitId$/README.md', "[the `xunit/assert.xunit` README](https://github.com/xunit/assert.xunit/blob/$(GitAssertModuleCommitId)/README.md)."))</_XunitNuspecDescription>
+      <_XunitNewReadmeFile>$([System.IO.Path]::GetDirectoryName($(_XunitNuspecFile)))\obj\$([System.IO.Path]::GetFileNameWithoutExtension($(_XunitNuspecFile))).README.md</_XunitNewReadmeFile>
+      <_XunitNewReadmeText>
+# $(_XunitNuspecTitle)
+
+$(_XunitNuspecDescription)
+
+$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)..\README.md))
+      </_XunitNewReadmeText>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(_XunitNewReadmeFile)" Lines="$(_XunitNewReadmeText)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <!-- Supplement Nerdbank.GitVersioning version calculations -->
+  <Target Name="UpdateAssemblyVersionInfo" BeforeTargets="GenerateAssemblyNBGVVersionInfo" DependsOnTargets="GetBuildVersion">
+    <PropertyGroup>
+      <!-- Local builds should have a '-dev' suffix on the build number -->
+      <PrereleaseSuffix Condition=" '$(GITHUB_ACTIONS)' != 'true' ">-dev</PrereleaseSuffix>
+      <!-- AssemblyVersion and AssemblyFileVersion should be x.y.z.0 -->
+      <AssemblyVersion>$(BuildVersionSimple)</AssemblyVersion>
+      <AssemblyFileVersion>$(BuildVersionSimple)</AssemblyFileVersion>
+      <!-- Always put the Git hash in the informational version, even for non-pre-release versions -->
+      <AssemblyInformationalVersion>$(BuildVersionSimple)$(PrereleaseVersion)$(PrereleaseSuffix)+$(GitCommitIdShort)</AssemblyInformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="UpdateNuSpecProperties" BeforeTargets="GenerateNuspec" DependsOnTargets="GetBuildVersion">
+    <ReadLinesFromFile File="$(MSBuildThisFileDirectory)..\.git\modules\src\xunit.v3.assert\Asserts\HEAD">
+      <Output TaskParameter="Lines" PropertyName="GitAssertModuleCommitId"/>
+    </ReadLinesFromFile>
+    <PropertyGroup>
+      <SignedPath />
+      <SignedPath Condition=" '$(SIGN_APP_SECRET)' != '' ">signed\</SignedPath>
+      <!-- Local builds should have a '-dev' suffix on the build number -->
+      <PrereleaseSuffix Condition=" '$(GITHUB_ACTIONS)' != 'true' ">-dev</PrereleaseSuffix>
+      <!-- Never put the Git hash in the package version -->
+      <PackageVersion>$(BuildVersionSimple)$(PrereleaseVersion)$(PrereleaseSuffix)</PackageVersion>
+      <PackageReleaseNotes>https://xunit.net/releases/v3/$(PackageVersion)</PackageReleaseNotes>
+      <!-- Pass through values we don't know ahead of time for any hand-crafted .nuspec files -->
+      <NuspecProperties>
+        Configuration=$(Configuration);
+        GitAssertModuleCommitId=$(GitAssertModuleCommitId);
+        GitCommitId=$(GitCommitId);
+        Microsoft_Bcl_AsyncInterfaces_Version=$(Microsoft_Bcl_AsyncInterfaces_Version);
+        Microsoft_Testing_Version=$(Microsoft_Testing_Version);
+        Mono_Cecil_Version=$(Mono_Cecil_Version);
+        PackageVersion=$(PackageVersion);
+        SignedPath=$(SignedPath);
+        System_Collections_Immutable_Version=$(System_Collections_Immutable_Version);
+        System_Memory_Version=$(System_Memory_Version);
+        xunit_abstractions_Version=$(xunit_abstractions_Version);
+        xunit_analyzers_Version=$(xunit_analyzers_Version);
+      </NuspecProperties>
+    </PropertyGroup>
+  </Target>
+
+  <!-- V3-specific test projects -->
+  <Choose>
+    <When Condition=" $(MSBuildProjectName.Contains('.v3.')) AND $(MSBuildProjectName.EndsWith('.tests')) ">
+      <ItemGroup>
+        <Compile Include="$(MSBuildThisFileDirectory)xunit.v3.core\Package\content\DefaultRunnerReporters.cs" LinkBase="Common" />
+      </ItemGroup>
+    </When>
+  </Choose>
+
+</Project>

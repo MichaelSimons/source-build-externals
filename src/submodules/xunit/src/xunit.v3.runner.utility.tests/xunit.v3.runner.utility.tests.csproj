@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);UNIT_TEST</DefineConstants>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\xunit.v3.runner.utility\Frameworks\v1\Xunit1ExceptionUtility.cs" LinkBase="Frameworks\v1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="ConfigReader_*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <Reference Include="System.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\xunit.v3.runner.utility\xunit.v3.runner.utility.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Required for F# acceptance tests -->
+    <PackageReference Include="FSharp.Compiler.Service" Version="[$(FSharp_Compiler_Service_Version)]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Required for xUnit.net v1 acceptance tests -->
+    <PackageDownload Include="xunit" Version="[$(xunit_Version_v1)]" />
+    <PackageDownload Include="xunit.extensions" Version="[$(xunit_Version_v1)]" />
+    <!-- Required for xUnit.net v2 acceptance tests -->
+    <PackageDownload Include="xunit.abstractions" Version="[$(xunit_abstractions_Version)]" />
+    <PackageDownload Include="xunit.assert" Version="[$(xunit_Version_v2)]" />
+    <PackageDownload Include="xunit.extensibility.core" Version="[$(xunit_Version_v2)]" />
+    <PackageDownload Include="xunit.extensibility.execution" Version="[$(xunit_Version_v2)]" />
+  </ItemGroup>
+
+  <Target Name="CopyXunitBinaries" AfterTargets="Build" Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <ItemGroup>
+      <!-- Required for xUnit.net v1 acceptance tests -->
+      <XunitBinaries Include="$(NuGetPackageRoot)\xunit\$(xunit_Version_v1)\lib\net20\xunit.dll" />
+      <XunitBinaries Include="$(NuGetPackageRoot)\xunit.extensions\$(xunit_Version_v1)\lib\net20\xunit.extensions.dll" />
+      <!-- Required for xUnit.net v2 acceptance tests -->
+      <XunitBinaries Include="$(NuGetPackageRoot)\xunit.abstractions\$(xunit_abstractions_Version)\lib\net35\xunit.abstractions.dll" />
+      <XunitBinaries Include="$(NuGetPackageRoot)\xunit.assert\$(xunit_Version_v2)\lib\netstandard1.1\xunit.assert.dll" />
+      <XunitBinaries Include="$(NuGetPackageRoot)\xunit.extensibility.core\$(xunit_Version_v2)\lib\net452\xunit.core.dll" />
+      <XunitBinaries Include="$(NuGetPackageRoot)\xunit.extensibility.execution\$(xunit_Version_v2)\lib\net452\xunit.execution.desktop.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(XunitBinaries)" DestinationFolder="$(OutputPath)" />
+  </Target>
+
+</Project>

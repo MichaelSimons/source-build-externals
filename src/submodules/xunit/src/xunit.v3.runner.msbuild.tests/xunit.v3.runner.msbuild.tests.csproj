@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\xunit.v3.runner.msbuild\xunit.v3.runner.msbuild.csproj" />
+  </ItemGroup>
+
+</Project>

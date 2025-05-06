@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+	<metadata>
+		<id>xunit.v3.runner.console</id>
+		<version>$PackageVersion$</version>
+		<title>xUnit.net v3 [Runner: Console]</title>
+		<authors>jnewkirk,bradwilson</authors>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<license type="expression">Apache-2.0</license>
+		<licenseUrl>https://licenses.nuget.org/Apache-2.0</licenseUrl>
+		<icon>_content/logo-128-transparent.png</icon>
+		<readme>_content/README.md</readme>
+		<releaseNotes>https://xunit.net/releases/v3/$PackageVersion$</releaseNotes>
+		<description>Console runner for the xUnit.net framework. Capable of running xUnit.net v1, v2, and v3 tests. Requires .NET Framework 4.7.2 or later (or Mono, on non-Windows machines).</description>
+		<copyright>Copyright (C) .NET Foundation</copyright>
+		<repository type="git" url="https://github.com/xunit/xunit" commit="$GitCommitId$" />
+		<developmentDependency>true</developmentDependency>
+	</metadata>
+	<!-- Remember to update tools\builder\targets\SignAssemblies.cs when assemblies are added or removed -->
+	<files>
+		<file target="_content\" src="..\..\tools\media\logo-128-transparent.png" />
+		<file target="_content\README.md" src="obj\xunit.v3.runner.console.README.md" />
+
+		<file target="buildTransitive\" src="Package\buildTransitive\*" />
+
+		<file target="tools\net472\" src="bin\$Configuration$\net472\merged\xunit.abstractions.dll" />
+		<file target="tools\net472\" src="bin\$Configuration$\net472\merged\$SignedPath$xunit.v3.runner.console.exe" />
+		<file target="tools\net472\" src="bin\$Configuration$\net472\merged\xunit.v3.runner.console.exe.config" />
+		<file target="tools\net472\" src="..\xunit.v3.runner.console.x86\bin\$Configuration$\net472\merged\$SignedPath$xunit.v3.runner.console.x86.exe" />
+		<file target="tools\net472\" src="..\xunit.v3.runner.console.x86\bin\$Configuration$\net472\merged\xunit.v3.runner.console.x86.exe.config" />
+
+		<file target="tools\net48\" src="bin\$Configuration$\net48\merged\xunit.abstractions.dll" />
+		<file target="tools\net48\" src="bin\$Configuration$\net48\merged\$SignedPath$xunit.v3.runner.console.exe" />
+		<file target="tools\net48\" src="bin\$Configuration$\net48\merged\xunit.v3.runner.console.exe.config" />
+		<file target="tools\net48\" src="..\xunit.v3.runner.console.x86\bin\$Configuration$\net48\merged\$SignedPath$xunit.v3.runner.console.x86.exe" />
+		<file target="tools\net48\" src="..\xunit.v3.runner.console.x86\bin\$Configuration$\net48\merged\xunit.v3.runner.console.x86.exe.config" />
+
+		<file target="tools\net481\" src="bin\$Configuration$\net481\merged\xunit.abstractions.dll" />
+		<file target="tools\net481\" src="bin\$Configuration$\net481\merged\$SignedPath$xunit.v3.runner.console.exe" />
+		<file target="tools\net481\" src="bin\$Configuration$\net481\merged\xunit.v3.runner.console.exe.config" />
+		<file target="tools\net481\" src="..\xunit.v3.runner.console.x86\bin\$Configuration$\net481\merged\$SignedPath$xunit.v3.runner.console.x86.exe" />
+		<file target="tools\net481\" src="..\xunit.v3.runner.console.x86\bin\$Configuration$\net481\merged\xunit.v3.runner.console.x86.exe.config" />
+	</files>
+</package>

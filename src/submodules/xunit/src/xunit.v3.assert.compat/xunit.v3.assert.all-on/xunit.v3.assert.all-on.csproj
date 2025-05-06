@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AnalysisLevel>latest-All</AnalysisLevel>
+    <DefineConstants>$(DefineConstants);XUNIT_NULLABLE</DefineConstants>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <!--
+    The target list here should be comprehensive: all supporting .NET Standard, .NET Framework,
+    and .NET versions (LTS & latest). We don't need netstandard2.0 or net8.0 since those are
+    already covered by 'xunit.v3.assert'.
+    -->
+    <TargetFrameworks>netstandard2.1;net472;net48;net481;net9.0</TargetFrameworks>
+  </PropertyGroup>
+
+</Project>

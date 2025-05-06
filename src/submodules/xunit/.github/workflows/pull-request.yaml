@@ -1,0 +1,52 @@
+name: "xUnit.net PR Build (main)"
+on:
+  - pull_request
+  - workflow_dispatch
+
+jobs:
+  build:
+    name: "Build"
+    runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE: true
+      DOTNET_NOLOGO: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-22.04, macOS-14]
+    steps:
+      - name: Clone source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Add MSBuild to PATH (Windows)
+        uses: microsoft/setup-msbuild@v2
+        if: matrix.os == 'windows-2022'
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Get .NET information
+        run: dotnet --info
+        continue-on-error: true
+
+      - name: Get Mono information (non-Windows)
+        run: mono --version
+        if: ${{ matrix.os != 'windows-2022' }}
+
+      - name: "Build target: BuildAll"
+        run: dotnet run --project tools/builder --no-launch-profile -- BuildAll --timing --no-x86
+
+      - name: "Upload artifact: test-${{ matrix.os }}"
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-${{ matrix.os }}
+          path: artifacts/test
+          compression-level: 9
+        if: always()

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName Condition=" '$(TargetFramework)' == 'net472' ">xunit.v3.runner.utility.netfx</AssemblyName>
+    <AssemblyName Condition=" '$(TargetFramework)' == 'net8.0' ">xunit.v3.runner.utility.netcore</AssemblyName>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <DefineConstants>$(DefineConstants);XUNIT_RUNNER_UTILITY</DefineConstants>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.abstractions" Version="$(xunit_abstractions_Version)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\xunit.v3.runner.common\xunit.v3.runner.common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+
+</Project>
