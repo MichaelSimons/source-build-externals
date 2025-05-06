@@ -12,7 +12,7 @@
 
     <ProjectDir>$(MSBuildThisFileDirectory)</ProjectDir>
     <KeysDir>$(ProjectDir)keys/</KeysDir>
-    <SubmoduleDirectory>$(ProjectDir)src/</SubmoduleDirectory>
+    <SubmoduleDirectory>$(ProjectDir)src/submodules/</SubmoduleDirectory>
     <PatchesDir>$(ProjectDir)patches/</PatchesDir>
     <XPlatSourceBuildTasksAssembly>$([MSBuild]::NormalizePath('$(ArtifactsBinDir)', 'Microsoft.DotNet.SourceBuild.Tasks.XPlat', '$(Configuration)', '$(NetCurrent)', 'Microsoft.DotNet.SourceBuild.Tasks.XPlat.dll'))</XPlatSourceBuildTasksAssembly>
 
